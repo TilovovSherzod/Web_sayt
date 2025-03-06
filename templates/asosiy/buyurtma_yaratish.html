@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+
+{% block title %}Buyurtma berish - SAVDO{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Buyurtma berish</h1>
+    
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Yetkazib berish ma'lumotlari</h5>
+                </div>
+                <div class="card-body">
+                    <form id="orderForm" method="post" action="{% url 'buyurtma_yaratish' %}">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="ism" class="form-label">Ism <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="ism" name="ism" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="familiya" class="form-label">Familiya <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="familiya" name="familiya" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="telefon" class="form-label">Telefon raqami <span class="text-danger">*</span></label>
+                            <input type="tel" class="form-control" id="telefon" name="telefon" placeholder="+998 XX XXX XX XX" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="manzil" class="form-label">Yetkazib berish manzili <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="manzil" name="manzil" rows="3" required></textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">To'lov usuli <span class="text-danger">*</span></label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="tolov_usuli" id="tolov_naqd" value="naqd" checked>
+                                <label class="form-check-label" for="tolov_naqd">
+                                    <i class="fas fa-money-bill-wave me-2"></i>Naqd pul
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="tolov_usuli" id="tolov_karta" value="karta">
+                                <label class="form-check-label" for="tolov_karta">
+                                    <i class="fas fa-credit-card me-2"></i>Karta orqali
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Buyurtma ma'lumotlari</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6>Maxsulotlar:</h6>
+                        <ul class="list-group list-group-flush">
+                            {% for item in savat.savatlar.all %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                <div>
+                                    <span>{{ item.maxsulot.nomi }}</span>
+                                    <small class="text-muted d-block">{{ item.miqdor }} x 
+                                        {% if item.maxsulot.chegirma_narx %}
+                                        {{ item.maxsulot.chegirma_narx }}
+                                        {% else %}
+                                        {{ item.maxsulot.narx }}
+                                        {% endif %} so'm
+                                    </small>
+                                </div>
+                                <span>{{ item.jami_narx }} so'm</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Maxsulotlar:</span>
+                        <span>{{ savat.jami_narx }} so'm</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Yetkazib berish:</span>
+                        <span>Bepul</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between mb-3">
+                        <strong>Jami:</strong>
+                        <strong>{{ savat.jami_narx }} so'm</strong>
+                    </div>
+                    
+                    <button type="submit" form="orderForm" class="btn btn-primary w-100">
+                        Buyurtmani tasdiqlash
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Telefon raqami formati
+        const telefonInput = document.getElementById('telefon');
+        telefonInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 0 && value[0] !== '+') {
+                value = '+' + value;
+            }
+            e.target.value = value;
+        });
+        
+        // Formani tekshirish
+        const orderForm = document.getElementById('orderForm');
+        orderForm.addEventListener('submit', function(e) {
+            const ism = document.getElementById('ism').value.trim();
+            const familiya = document.getElementById('familiya').value.trim();
+            const telefon = document.getElementById('telefon').value.trim();
+            const manzil = document.getElementById('manzil').value.trim();
+            
+            if (!ism || !familiya || !telefon || !manzil) {
+                e.preventDefault();
+                alert('Iltimos, barcha majburiy maydonlarni to\'ldiring');
+            }
+        });
+    });
+</script>
+{% endblock %}
+

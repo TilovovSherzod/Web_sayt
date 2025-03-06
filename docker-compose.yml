@@ -1,0 +1,29 @@
+#version: "3.9"
+
+services:
+  web:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/code
+    ports:
+      - "8003:8000"
+    depends_on:
+      - db
+    environment:
+      - DEBUG=1
+      - SECRET_KEY=django-insecure-key-change-in-production
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/postgres
+  
+  db:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_PASSWORD=1234
+      - POSTGRES_USER=ShohMarket_admin
+      - POSTGRES_DB=ShohMarket_db
+
+volumes:
+  postgres_data:
+

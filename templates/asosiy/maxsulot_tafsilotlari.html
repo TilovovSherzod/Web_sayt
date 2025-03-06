@@ -1,0 +1,200 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ maxsulot.nomi }} - SAVDO{% endblock %}
+
+{% block content %}
+<div class="container">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'asosiy' %}">Asosiy</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'asosiy' %}?kategoriya={{ maxsulot.kategoriya.id }}">{{ maxsulot.kategoriya.nomi }}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ maxsulot.nomi }}</li>
+        </ol>
+    </nav>
+
+    <div class="row mb-5">
+        <!-- Maxsulot rasmi -->
+        <div class="col-md-6 mb-4">
+            <div class="product-image-container">
+                <img src="{{ maxsulot.rasm.url }}" class="img-fluid rounded" alt="{{ maxsulot.nomi }}">
+            </div>
+        </div>
+        
+        <!-- Maxsulot ma'lumotlari -->
+        <div class="col-md-6">
+            <h1 class="mb-3">{{ maxsulot.nomi }}</h1>
+            <p class="text-muted mb-3">Kategoriya: <a href="{% url 'asosiy' %}?kategoriya={{ maxsulot.kategoriya.id }}">{{ maxsulot.kategoriya.nomi }}</a></p>
+            
+            <div class="mb-3">
+                {% if maxsulot.chegirma_narx %}
+                <span class="text-decoration-line-through text-muted fs-5">{{ maxsulot.narx }} so'm</span>
+                <span class="text-danger fw-bold fs-3">{{ maxsulot.chegirma_narx }} so'm</span>
+                {% else %}
+                <span class="fw-bold fs-3">{{ maxsulot.narx }} so'm</span>
+                {% endif %}
+            </div>
+            
+            <div class="mb-4">
+                <p>{{ maxsulot.tavsif }}</p>
+            </div>
+            
+            <div class="d-flex align-items-center mb-4">
+                <div class="input-group me-3" style="width: 130px;">
+                    <button class="btn btn-outline-secondary" type="button" id="decrementBtn">-</button>
+                    <input type="number" class="form-control text-center" id="quantity" value="1" min="1">
+                    <button class="btn btn-outline-secondary" type="button" id="incrementBtn">+</button>
+                </div>
+                <button class="btn btn-primary" id="addToCartBtn" data-id="{{ maxsulot.id }}">
+                    <i class="fas fa-cart-plus me-2"></i>Savatga qo'shish
+                </button>
+            </div>
+            
+            <div class="mb-3">
+                <p class="mb-1"><i class="fas fa-check-circle text-success me-2"></i>Tez yetkazib berish</p>
+                <p class="mb-1"><i class="fas fa-check-circle text-success me-2"></i>Sifat kafolati</p>
+                <p class="mb-1"><i class="fas fa-check-circle text-success me-2"></i>To'lov turli usullarda</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- O'xshash maxsulotlar -->
+    {% if oxshash_maxsulotlar %}
+    <div class="row">
+        <div class="col-12">
+            <h3 class="section-title">O'xshash maxsulotlar</h3>
+        </div>
+        {% for maxsulot in oxshash_maxsulotlar %}
+        <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+            <div class="card h-100 shadow-sm product-card">
+                <a href="{% url 'maxsulot_tafsilotlari' maxsulot.id %}">
+                    <img src="{{ maxsulot.rasm.url }}" class="card-img-top" alt="{{ maxsulot.nomi }}">
+                </a>
+                <div class="card-body">
+                    <h5 class="card-title">{{ maxsulot.nomi }}</h5>
+                    <p class="card-text text-truncate">{{ maxsulot.tavsif }}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            {% if maxsulot.chegirma_narx %}
+                            <span class="text-decoration-line-through text-muted">{{ maxsulot.narx }} so'm</span>
+                            <span class="text-danger fw-bold">{{ maxsulot.chegirma_narx }} so'm</span>
+                            {% else %}
+                            <span class="fw-bold">{{ maxsulot.narx }} so'm</span>
+                            {% endif %}
+                        </div>
+                        <button class="btn btn-primary btn-sm add-to-cart" data-id="{{ maxsulot.id }}">
+                            <i class="fas fa-cart-plus"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+
+<!-- Savatga qo'shish modal -->
+<div class="modal fade" id="addToCartModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Maxsulot savatga qo'shildi</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="cartModalMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Davom etish</button>
+                <a href="{% url 'savat' %}" class="btn btn-primary">Savatga o'tish</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Miqdor tugmalari
+        const decrementBtn = document.getElementById('decrementBtn');
+        const incrementBtn = document.getElementById('incrementBtn');
+        const quantityInput = document.getElementById('quantity');
+        
+        // Miqdorni kamaytirish
+        decrementBtn.addEventListener('click', function() {
+            const currentValue = parseInt(quantityInput.value);
+            if (currentValue > 1) {
+                quantityInput.value = currentValue - 1;
+            }
+        });
+        
+        // Miqdorni oshirish
+        incrementBtn.addEventListener('click', function() {
+            const currentValue = parseInt(quantityInput.value);
+            quantityInput.value = currentValue + 1;
+        });
+        
+        // Savatga qo'shish tugmasi
+        const addToCartBtn = document.getElementById('addToCartBtn');
+        addToCartBtn.addEventListener('click', function() {
+            const productId = this.getAttribute('data-id');
+            const quantity = parseInt(quantityInput.value);
+            addToCart(productId, quantity);
+        });
+        
+        // O'xshash maxsulotlar uchun savatga qo'shish tugmalari
+        const addToCartButtons = document.querySelectorAll('.add-to-cart');
+        addToCartButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const productId = this.getAttribute('data-id');
+                addToCart(productId, 1);
+            });
+        });
+        
+        // Savatga qo'shish funksiyasi
+        function addToCart(productId, quantity) {
+            fetch('{% url "savatga_qoshish" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    maxsulot_id: productId,
+                    miqdor: quantity
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Savatdagi maxsulotlar sonini yangilash
+                    document.getElementById('savat-soni').textContent = data.savat_maxsulotlar_soni;
+                    
+                    // Modal xabarini yangilash va ko'rsatish
+                    document.getElementById('cartModalMessage').textContent = `"${data.maxsulot_nomi}" savatga qo'shildi!`;
+                    new bootstrap.Modal(document.getElementById('addToCartModal')).show();
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+        
+        // CSRF token olish funksiyasi
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    });
+</script>
+{% endblock %}
+

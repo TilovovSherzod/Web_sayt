@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% block title %}JWT Token olish - SAVDO{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">JWT Token olish</h4>
+                </div>
+                <div class="card-body">
+                    <form id="tokenForm">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Foydalanuvchi nomi</label>
+                            <input type="text" class="form-control" id="username" name="username" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Parol</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">Token olish</button>
+                        </div>
+                    </form>
+                    
+                    <div id="tokenResult" class="mt-4" style="display: none;">
+                        <h5>Token ma'lumotlari:</h5>
+                        <div class="mb-3">
+                            <label for="accessToken" class="form-label">Access Token</label>
+                            <textarea class="form-control" id="accessToken" rows="3" readonly></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="refreshToken" class="form-label">Refresh Token</label>
+                            <textarea class="form-control" id="refreshToken" rows="3" readonly></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const tokenForm = document.getElementById('tokenForm');
+        const tokenResult = document.getElementById('tokenResult');
+        const accessTokenField = document.getElementById('accessToken');
+        const refreshTokenField = document.getElementById('refreshToken');
+        
+        tokenForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            fetch('{% url "token_olish" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: `username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    accessTokenField.value = data.access;
+                    refreshTokenField.value = data.refresh;
+                    tokenResult.style.display = 'block';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Xatolik yuz berdi. Iltimos, qayta urinib ko\'ring.');
+            });
+        });
+        
+        // CSRF token olish funksiyasi
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    });
+</script>
+{% endblock %}
+

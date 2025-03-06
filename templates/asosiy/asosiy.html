@@ -1,0 +1,192 @@
+{% extends 'base.html' %}
+
+{% block title %}SAVDO - Asosiy sahifa{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Banner -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div id="mainCarousel" class="carousel slide" data-bs-ride="carousel">
+                <div class="carousel-indicators">
+                    <button type="button" data-bs-target="#mainCarousel" data-bs-slide-to="0" class="active"></button>
+                    <button type="button" data-bs-target="#mainCarousel" data-bs-slide-to="1"></button>
+                    <button type="button" data-bs-target="#mainCarousel" data-bs-slide-to="2"></button>
+                </div>
+                <div class="carousel-inner rounded shadow">
+                    <div class="carousel-item active">
+                        <img src="/static/images/banner1.jpg" class="d-block w-100" alt="Banner 1">
+                        <div class="carousel-caption d-none d-md-block">
+                            <h2>Kundalik tovarlar</h2>
+                            <p>Eng sifatli kundalik tovarlar bizning do'konimizda</p>
+                        </div>
+                    </div>
+                    <div class="carousel-item">
+                        <img src="/static/images/banner2.jpg" class="d-block w-100" alt="Banner 2">
+                        <div class="carousel-caption d-none d-md-block">
+                            <h2>Mazali taomlar</h2>
+                            <p>Eng mazali taomlar uchun kerakli mahsulotlar</p>
+                        </div>
+                    </div>
+                    <div class="carousel-item">
+                        <img src="/static/images/banner3.jpg" class="d-block w-100" alt="Banner 3">
+                        <div class="carousel-caption d-none d-md-block">
+                            <h2>Elektron texnika</h2>
+                            <p>Zamonaviy elektron texnika buyumlari</p>
+                        </div>
+                    </div>
+                </div>
+                <button class="carousel-control-prev" type="button" data-bs-target="#mainCarousel" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Oldingi</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#mainCarousel" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Keyingi</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Kategoriyalar -->
+    <div id="kategoriyalar" class="row mb-4">
+        <div class="col-12">
+            <h2 class="section-title">Kategoriyalar</h2>
+        </div>
+        {% for kategoriya in kategoriyalar %}
+        <div class="col-md-3 col-sm-6 mb-4">
+            <a href="{% url 'asosiy' %}?kategoriya={{ kategoriya.id }}#kategoriyalar" class="text-decoration-none">
+                <div class="card h-100 shadow-sm hover-card">
+                    {% if kategoriya.rasm %}
+                    <img src="{{ kategoriya.rasm.url }}" class="card-img-top" alt="{{ kategoriya.nomi }}">
+                    {% else %}
+                    <img src="/static/images/banner4.jpg" class="card-img-top" alt="{{ kategoriya.nomi }}">
+                    {% endif %}
+                    <div class="card-body text-center">
+                        <h5 class="card-title">{{ kategoriya.nomi }}</h5>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Maxsulotlar -->
+    <div id="maxsulotlar" class="row">
+        <div class="col-12">
+            <h2 class="section-title">Maxsulotlar</h2>
+        </div>
+        {% for maxsulot in maxsulotlar %}
+        <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+            <div class="card h-100 shadow-sm product-card">
+                <a href="{% url 'maxsulot_tafsilotlari' maxsulot.id %}">
+                    <img src="{{ maxsulot.rasm.url }}" class="card-img-top" alt="{{ maxsulot.nomi }}">
+                </a>
+                <div class="card-body">
+                    <h5 class="card-title">{{ maxsulot.nomi }}</h5>
+                    <p class="card-text text-truncate">{{ maxsulot.tavsif }}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            {% if maxsulot.chegirma_narx %}
+                            <span class="text-decoration-line-through text-muted">{{ maxsulot.narx }} so'm</span>
+                            <span class="text-danger fw-bold">{{ maxsulot.chegirma_narx }} so'm</span>
+                            {% else %}
+                            <span class="fw-bold">{{ maxsulot.narx }} so'm</span>
+                            {% endif %}
+                        </div>
+                        <button class="btn btn-primary btn-sm add-to-cart" data-id="{{ maxsulot.id }}">
+                            <i class="fas fa-cart-plus"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                Maxsulotlar topilmadi.
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Savatga qo'shish modal -->
+<div class="modal fade" id="addToCartModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Maxsulot savatga qo'shildi</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="cartModalMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Davom etish</button>
+                <a href="{% url 'savat' %}" class="btn btn-primary">Savatga o'tish</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Savatga qo'shish tugmalarini tanlash
+        const addToCartButtons = document.querySelectorAll('.add-to-cart');
+
+        // Har bir tugma uchun hodisa qo'shish
+        addToCartButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const productId = this.getAttribute('data-id');
+                addToCart(productId);
+            });
+        });
+
+        // Savatga qo'shish funksiyasi
+        function addToCart(productId) {
+            fetch('{% url "savatga_qoshish" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    maxsulot_id: productId,
+                    miqdor: 1
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Savatdagi maxsulotlar sonini yangilash
+                    document.getElementById('savat-soni').textContent = data.savat_maxsulotlar_soni;
+
+                    // Modal xabarini yangilash va ko'rsatish
+                    document.getElementById('cartModalMessage').textContent = `"${data.maxsulot_nomi}" savatga qo'shildi!`;
+                    new bootstrap.Modal(document.getElementById('addToCartModal')).show();
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        // CSRF token olish funksiyasi
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    });
+</script>
+{% endblock %}

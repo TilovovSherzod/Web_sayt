@@ -1,0 +1,275 @@
+{% extends 'base.html' %}
+
+{% block title %}Savat - SAVDO{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Savat</h1>
+    
+    {% if savat_maxsulotlar %}
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Maxsulot</th>
+                                <th>Narx</th>
+                                <th>Miqdor</th>
+                                <th>Jami</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in savat_maxsulotlar %}
+                            <tr class="cart-item" data-id="{{ item.maxsulot.id }}">
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <img src="{{ item.maxsulot.rasm.url }}" alt="{{ item.maxsulot.nomi }}" class="img-thumbnail me-3" style="width: 60px;">
+                                        <div>
+                                            <h6 class="mb-0">{{ item.maxsulot.nomi }}</h6>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if item.maxsulot.chegirma_narx %}
+                                    <span class="text-danger">{{ item.maxsulot.chegirma_narx }} so'm</span>
+                                    {% else %}
+                                    <span>{{ item.maxsulot.narx }} so'm</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="input-group" style="width: 120px;">
+                                        <button class="btn btn-sm btn-outline-secondary decrement-btn" type="button">-</button>
+                                        <input type="number" class="form-control form-control-sm text-center quantity-input" value="{{ item.miqdor }}" min="1">
+                                        <button class="btn btn-sm btn-outline-secondary increment-btn" type="button">+</button>
+                                    </div>
+                                </td>
+                                <td class="item-total">
+                                    {{ item.jami_narx }} so'm
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-danger remove-item">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="d-flex justify-content-between mb-4">
+                <a href="{% url 'asosiy' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-left me-2"></i>Xarid qilishni davom ettirish
+                </a>
+                <button id="clearCartBtn" class="btn btn-outline-danger">
+                    <i class="fas fa-trash me-2"></i>Savatni tozalash
+                </button>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Buyurtma ma'lumotlari</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Maxsulotlar:</span>
+                        <span id="cart-subtotal">{{ savat.jami_narx }} so'm</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Yetkazib berish:</span>
+                        <span>Bepul</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between mb-3">
+                        <strong>Jami:</strong>
+                        <strong id="cart-total">{{ savat.jami_narx }} so'm</strong>
+                    </div>
+                    <a href="{% url 'buyurtma_yaratish' %}" class="btn btn-primary w-100">
+                        Buyurtma berish
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="card shadow-sm mb-4">
+        <div class="card-body text-center py-5">
+            <i class="fas fa-shopping-cart fa-4x text-muted mb-3"></i>
+            <h3>Savatingiz bo'sh</h3>
+            <p class="mb-4">Savatingizga maxsulotlar qo'shing va xarid qilishni boshlang.</p>
+            <a href="{% url 'asosiy' %}" class="btn btn-primary">
+                <i class="fas fa-shopping-bag me-2"></i>Xarid qilishni boshlash
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Savatni tozalash modal -->
+<div class="modal fade" id="clearCartModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Savatni tozalash</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Haqiqatan ham savatni to'liq tozalamoqchimisiz?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Bekor qilish</button>
+                <button type="button" class="btn btn-danger" id="confirmClearCart">Tozalash</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Miqdorni kamaytirish tugmalari
+        const decrementBtns = document.querySelectorAll('.decrement-btn');
+        decrementBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const input = this.parentElement.querySelector('.quantity-input');
+                const currentValue = parseInt(input.value);
+                if (currentValue > 1) {
+                    input.value = currentValue - 1;
+                    updateCartItem(this);
+                }
+            });
+        });
+        
+        // Miqdorni oshirish tugmalari
+        const incrementBtns = document.querySelectorAll('.increment-btn');
+        incrementBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const input = this.parentElement.querySelector('.quantity-input');
+                input.value = parseInt(input.value) + 1;
+                updateCartItem(this);
+            });
+        });
+        
+        // Miqdor o'zgartirilganda
+        const quantityInputs = document.querySelectorAll('.quantity-input');
+        quantityInputs.forEach(input => {
+            input.addEventListener('change', function() {
+                if (parseInt(this.value) < 1) {
+                    this.value = 1;
+                }
+                updateCartItem(this);
+            });
+        });
+        
+        // Maxsulotni o'chirish tugmalari
+        const removeItemBtns = document.querySelectorAll('.remove-item');
+        removeItemBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const row = this.closest('.cart-item');
+                const input = row.querySelector('.quantity-input');
+                input.value = 0;
+                updateCartItem(input);
+            });
+        });
+        
+        // Savatni tozalash tugmasi
+        const clearCartBtn = document.getElementById('clearCartBtn');
+        if (clearCartBtn) {
+            clearCartBtn.addEventListener('click', function() {
+                new bootstrap.Modal(document.getElementById('clearCartModal')).show();
+            });
+        }
+        
+        // Savatni tozalashni tasdiqlash
+        const confirmClearCart = document.getElementById('confirmClearCart');
+        if (confirmClearCart) {
+            confirmClearCart.addEventListener('click', function() {
+                clearCart();
+            });
+        }
+        
+        // Savatdagi maxsulotni yangilash
+        function updateCartItem(element) {
+            const row = element.closest('.cart-item');
+            const productId = row.getAttribute('data-id');
+            const quantity = parseInt(row.querySelector('.quantity-input').value);
+            
+            fetch('{% url "savat_yangilash" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    maxsulot_id: productId,
+                    miqdor: quantity
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Savatdagi maxsulotlar sonini yangilash
+                    document.getElementById('savat-soni').textContent = data.maxsulotlar_soni;
+                    
+                    // Jami narxni yangilash
+                    document.getElementById('cart-subtotal').textContent = data.jami_narx + ' so\'m';
+                    document.getElementById('cart-total').textContent = data.jami_narx + ' so\'m';
+                    
+                    // Agar miqdor 0 bo'lsa, qatorni o'chirish
+                    if (quantity === 0) {
+                        row.remove();
+                        
+                        // Agar savat bo'sh bo'lsa, sahifani qayta yuklash
+                        if (data.maxsulotlar_soni === 0) {
+                            location.reload();
+                        }
+                    }
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+        
+        // Savatni tozalash
+        function clearCart() {
+            fetch('{% url "savat_tozalash" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+        
+        // CSRF token olish funksiyasi
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    });
+</script>
+{% endblock %}
+

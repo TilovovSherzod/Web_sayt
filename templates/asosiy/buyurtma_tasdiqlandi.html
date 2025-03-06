@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}Buyurtma tasdiqlandi - SAVDO{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body text-center py-5">
+                    <div class="mb-4">
+                        <i class="fas fa-check-circle text-success fa-5x"></i>
+                    </div>
+                    <h2 class="mb-3">Buyurtmangiz muvaffaqiyatli qabul qilindi!</h2>
+                    <p class="mb-3">Buyurtma raqami: <strong>#{{ buyurtma.id }}</strong></p>
+                    <p class="mb-4">Buyurtmangiz tez orada ko'rib chiqiladi va siz bilan bog'lanamiz.</p>
+                    <a href="{% url 'asosiy' %}" class="btn btn-primary">
+                        <i class="fas fa-home me-2"></i>Asosiy sahifaga qaytish
+                    </a>
+                </div>
+            </div>
+            
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Buyurtma ma'lumotlari</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6>Shaxsiy ma'lumotlar:</h6>
+                            <p class="mb-1">{{ buyurtma.ism }} {{ buyurtma.familiya }}</p>
+                            <p class="mb-1">{{ buyurtma.telefon }}</p>
+                            <p class="mb-1">{{ buyurtma.manzil }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Buyurtma ma'lumotlari:</h6>
+                            <p class="mb-1">Buyurtma raqami: #{{ buyurtma.id }}</p>
+                            <p class="mb-1">Sana: {{ buyurtma.yaratilgan_sana|date:"d.m.Y H:i" }}</p>
+                            <p class="mb-1">To'lov usuli: 
+                                {% if buyurtma.tolov_usuli == 'naqd' %}
+                                Naqd pul
+                                {% else %}
+                                Karta orqali
+                                {% endif %}
+                            </p>
+                            <p class="mb-1">Holat: {{ buyurtma.get_holat_display }}</p>
+                        </div>
+                    </div>
+                    
+                    <h6>Maxsulotlar:</h6>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Maxsulot</th>
+                                    <th>Narx</th>
+                                    <th>Miqdor</th>
+                                    <th>Jami</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in buyurtma.buyurtma_maxsulotlari.all %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <img src="{{ item.maxsulot.rasm.url }}" alt="{{ item.maxsulot.nomi }}" class="img-thumbnail me-3" style="width: 50px;">
+                                            <span>{{ item.maxsulot.nomi }}</span>
+                                        </div>
+                                    </td>
+                                    <td>{{ item.narx }} so'm</td>
+                                    <td>{{ item.miqdor }}</td>
+                                    <td>{{ item.jami_narx }} so'm</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mt-3">
+                        <span>Jami:</span>
+                        <strong>{{ buyurtma.jami_narx }} so'm</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
